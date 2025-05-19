@@ -75,12 +75,34 @@ interface EmployeeInfo {
   updatedAt: string;
 }
 
+interface ApiPurchaseResponse {
+  id: string;
+  customerId: string;
+  customer: {
+    id: string;
+    userId: string;
+    address: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+  employeeId?: string;
+  employee?: EmployeeInfo | null;
+  totalPrice: number;
+  productSells: ProductSellDetail[];
+  createdAt: string;
+  updatedAt: string;
+  status?: "completed" | "pending" | "cancelled";
+  orderNumber?: string;
+}
+
 interface PurchaseDetail extends Omit<Sell, "products"> {
   productSells: ProductSellDetail[];
   customer: {
     id: string;
     userId: string;
     address: string;
+    createdAt: Date;
+    updatedAt: Date;
   };
   employee: EmployeeInfo | null;
 }
@@ -97,8 +119,20 @@ export function PurchaseHistory() {
       try {
         setLoading(true);
         const response = await SellsService.getUserPurchaseHistory();
-        // Utilizamos un casting más seguro a través de unknown
-        setPurchases((response?.data || []) as unknown as PurchaseDetail[]);
+        // Convertir las fechas de string a Date y asegurar la estructura correcta
+        const purchasesWithDates = (
+          (response?.data || []) as unknown as ApiPurchaseResponse[]
+        ).map((purchase) => ({
+          ...purchase,
+          customer: {
+            ...purchase.customer,
+            createdAt: new Date(purchase.customer.createdAt),
+            updatedAt: new Date(purchase.customer.updatedAt),
+          },
+          createdAt: new Date(purchase.createdAt),
+          updatedAt: new Date(purchase.updatedAt),
+        }));
+        setPurchases(purchasesWithDates as unknown as PurchaseDetail[]);
         setError(null);
       } catch (err) {
         setError(
