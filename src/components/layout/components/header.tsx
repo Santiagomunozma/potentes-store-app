@@ -129,12 +129,14 @@ const Header = ({ opened, toggle }: HeaderProps) => {
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
-                <Menu.Item
-                  leftSection={<IconHistory size={16} />}
-                  onClick={() => handleNavigation("/purchase-history")}
-                >
-                  Mis compras
-                </Menu.Item>
+                {isAdmin && (
+                  <Menu.Item
+                    leftSection={<IconHistory size={16} />}
+                    onClick={() => handleNavigation("/purchase-history")}
+                  >
+                    Mis compras
+                  </Menu.Item>
+                )}
                 <Menu.Item
                   leftSection={<IconLogout size={16} />}
                   onClick={handleLogout}
