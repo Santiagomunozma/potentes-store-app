@@ -62,7 +62,6 @@ const RegisterForm = () => {
     }
     createUser(data, {
       onSuccess: () => {
-        close();
         navigate({ to: "/login" });
         toast.success("Usuario creado correctamente");
       },
