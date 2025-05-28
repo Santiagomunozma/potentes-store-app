@@ -29,6 +29,7 @@ import useCartStore from "../../store/useCart";
 import { ProductSell } from "../../types/product-sell";
 import { Color } from "../../types/colors";
 import { Size } from "../../types/sizes";
+import toast from "react-hot-toast";
 
 const ProductDetailsView = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ const ProductDetailsView = () => {
   const [color, setColor] = useState<Color | null>(null);
   const [size, setSize] = useState<Size | null>(null);
 
-  const { addToCart } = useCartStore();
+  const { addToCart, cart, removeFromCart } = useCartStore();
 
   const { id } = useParams({ from: "/product-details/$id" });
   const { data: response, isLoading } = useGetProductDetails(id);
@@ -65,13 +66,39 @@ const ProductDetailsView = () => {
       return inv.size.size === size?.size && inv.color.color === color?.color;
     });
 
-    console.log("Found inventory:", inventory);
     return inventory?.quantity ?? 0;
   }, [response?.data, size, color]);
 
   const handleAddToCart = () => {
     if (!response?.data || !size || !color) return;
 
+    // Validamos si el producto ya esta en el carro
+    const productInCart = cart.find(
+      (product) =>
+        product.product.id === response.data.id &&
+        product.color.color === color.color &&
+        product.size.size === size.size
+    );
+
+    if (productInCart) {
+      // Si el producto ya esta en el carro, actualizamos la cantidad
+      const updatedProduct = {
+        ...productInCart,
+        quantity: productInCart.quantity + quantity,
+      };
+
+      // Validamos disponibilidad en el inventario
+      if (updatedProduct.quantity > availableStock) {
+        toast.error("No hay suficiente stock");
+        return;
+      }
+
+      removeFromCart(productInCart);
+      addToCart(updatedProduct);
+      return;
+    }
+
+    // Si el producto no esta en el carro, lo agregamos
     const productSell: ProductSell = {
       id: `${response.data.id}-${size}-${color}-${Date.now()}`,
       product: response.data,
@@ -80,6 +107,12 @@ const ProductDetailsView = () => {
       size,
       totalPrice: response.data.price * quantity,
     };
+
+    // Validamos disponibilidad en el inventario
+    if (productSell.quantity > availableStock) {
+      toast.error("No hay suficiente stock");
+      return;
+    }
 
     addToCart(productSell);
   };
