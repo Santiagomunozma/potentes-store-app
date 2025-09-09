@@ -10,7 +10,7 @@ pipeline {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/Santiagomunozma/potentes-store-frontend.git',
-                    credentialsId: 'github-token'
+                    credentialsId: 'Jenkinsfile'
             }
         }
 
