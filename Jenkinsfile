@@ -5,16 +5,16 @@ pipeline {
         nodejs "node-20"
     }
 
-    stage('Checkout') {
-    steps {
-        git branch: 'main',
-            url: 'https://github.com/Santiagomunozma/potentes-store-frontend.git',
-            credentialsId: 'github-token'
-    }
-}
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Santiagomunozma/potentes-store-frontend.git',
+                    credentialsId: 'github-token'
+            }
+        }
 
-
-        stage('Instalar dependencias') {
+        stage('Install Dependencies') {
             steps {
                 bat 'npm install'
             }
@@ -26,11 +26,12 @@ pipeline {
             }
         }
 
-        stage('Empaquetar artefacto') {
+        stage('Package Artifact') {
             steps {
                 bat 'powershell Compress-Archive -Path dist -DestinationPath dist.zip'
                 archiveArtifacts artifacts: 'dist.zip', fingerprint: true
             }
         }
- }
+    }
+}
 
