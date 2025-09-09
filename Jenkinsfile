@@ -5,13 +5,14 @@ pipeline {
         nodejs "node-20"
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main',
-                    url: 'https://github.com/Santiagomunozma/potentes-store-frontend.git'
-            }
-        }
+    stage('Checkout') {
+    steps {
+        git branch: 'main',
+            url: 'https://github.com/Santiagomunozma/potentes-store-frontend.git',
+            credentialsId: 'github-token'
+    }
+}
+
 
         stage('Instalar dependencias') {
             steps {
