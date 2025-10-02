@@ -1,5 +1,6 @@
 import React, { ReactElement } from "react";
 import { render, RenderOptions } from "@testing-library/react";
+import { act } from "react"; // Import act from react for React 19 compatibility
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { shadcnTheme } from "../../theme";
@@ -43,7 +44,7 @@ const customRender = (
 
 // Re-exportar todo
 export * from "@testing-library/react";
-export { customRender as render };
+export { customRender as render, act }; // Export act from react
 
 // Utilidades adicionales para tests
 export const mockProduct = {
