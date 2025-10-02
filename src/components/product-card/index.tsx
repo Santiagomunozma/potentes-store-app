@@ -133,7 +133,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   const handleNavigateToDetails = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate({ to: "/product-details/$id", params: { id } });
+    navigate({ to: "/product-details/$id", params: { id: id } } as any);
   };
 
   return (
