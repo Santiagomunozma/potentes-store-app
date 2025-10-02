@@ -13,7 +13,11 @@ pipeline {
                     credentialsId: 'Jenkinsfile'
             }
         }
-
+        stage('Clean Workspace') {
+    steps {
+        deleteDir() // Limpia todo el workspace
+    }
+}
         stage('Install Dependencies') {
             steps {
                 bat 'npm install'
