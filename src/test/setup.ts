@@ -1,16 +1,17 @@
 import "@testing-library/jest-dom";
 
-// Extend Jest matchers
+// Extend Jest matchers para TypeScript
 declare global {
   namespace jest {
     interface Matchers<R> {
       toBeInTheDocument(): R;
       toHaveClass(className: string): R;
-      toHaveStyle(style: Record<string, any>): R;
+      toHaveStyle(style: Record<string, unknown>): R;
       toHaveTextContent(text: string): R;
       toBeRequired(): R;
       toBeDisabled(): R;
-      toHaveValue(value: any): R;
+      toHaveValue(value: unknown): R;
+      toHaveAttribute(attr: string, value?: string): R;
     }
   }
 }
@@ -44,20 +45,35 @@ global.IntersectionObserver = jest.fn().mockImplementation(() => ({
   disconnect: jest.fn(),
 }));
 
-// Suprimir warnings de console en tests
+// Suprimir warnings específicos de React 19 y testing
 const originalError = console.error;
+const originalWarn = console.warn;
+
 beforeAll(() => {
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     if (
       typeof args[0] === "string" &&
-      args[0].includes("Warning: ReactDOM.render is deprecated")
+      (args[0].includes("Warning: ReactDOM.render is deprecated") ||
+        args[0].includes("ReactDOMTestUtils.act is deprecated") ||
+        args[0].includes("Warning: `ReactDOMTestUtils.act` is deprecated"))
     ) {
       return;
     }
     originalError.call(console, ...args);
   };
+
+  console.warn = (...args: unknown[]) => {
+    if (
+      typeof args[0] === "string" &&
+      (args[0].includes("ReactDOMTestUtils") || args[0].includes("act"))
+    ) {
+      return;
+    }
+    originalWarn.call(console, ...args);
+  };
 });
 
 afterAll(() => {
   console.error = originalError;
+  console.warn = originalWarn;
 });

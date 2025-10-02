@@ -12,7 +12,6 @@ export default {
     "^.+\\.(ts|tsx)$": [
       "ts-jest",
       {
-        useESM: true,
         tsconfig: {
           jsx: "react-jsx",
           esModuleInterop: true,
@@ -30,8 +29,10 @@ export default {
     "!src/**/*.d.ts",
     "!src/main.tsx",
     "!src/vite-env.d.ts",
+    "!src/test/**/*",
   ],
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  extensionsToTreatAsEsm: [".ts", ".tsx"],
+  testEnvironmentOptions: {
+    customExportConditions: [""],
+  },
 };
-

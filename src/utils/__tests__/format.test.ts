@@ -48,4 +48,3 @@ describe("formatCurrency", () => {
     expect(formatCurrency(1.005)).toBe("$1.01"); // Redondeo correcto
   });
 });
-

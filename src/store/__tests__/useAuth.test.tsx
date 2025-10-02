@@ -1,4 +1,8 @@
-import { renderHook, act } from "../../test/test-utils";
+/**
+ * @jest-environment jsdom
+ */
+import { renderHook } from "../../test/test-utils";
+import { act } from "react";
 import useAuthStore from "../useAuth";
 import { User } from "../../types/users";
 
