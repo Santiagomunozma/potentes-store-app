@@ -7,6 +7,12 @@ pipeline {
 
     environment {
         NODE_ENV = 'production'
+        // Configuración de Artifactory
+        ARTIFACTORY_URL = 'http://localhost:8082/artifactory'
+        ARTIFACTORY_GENERIC_REPO = 'generic-local'
+        // Versión automática basada en BUILD_NUMBER
+        VERSION = "${env.BUILD_NUMBER}"
+        ARTIFACT_NAME = "potentes-store-app-${VERSION}.zip"
     }
 
     options {
@@ -64,9 +70,70 @@ pipeline {
         stage('Package Artifact') {
             steps {
                 echo 'Empaquetando artefactos...'
-                bat 'powershell "if (Test-Path dist.zip) { Remove-Item dist.zip }"'
-                bat 'powershell Compress-Archive -Path dist -DestinationPath dist.zip'
-                archiveArtifacts artifacts: 'dist.zip', fingerprint: true
+                bat "powershell \"if (Test-Path ${ARTIFACT_NAME}) { Remove-Item ${ARTIFACT_NAME} }\""
+                bat "powershell Compress-Archive -Path dist -DestinationPath ${ARTIFACT_NAME}"
+                archiveArtifacts artifacts: "${ARTIFACT_NAME}", fingerprint: true
+            }
+        }
+
+        stage('Upload to Artifactory') {
+            steps {
+                script {
+                    echo 'Subiendo artefactos a Artifactory...'
+                    
+                    // Configurar servidor Artifactory
+                    def server = Artifactory.server('artifactory-server')
+                    
+                    // Crear especificación de upload
+                    def uploadSpec = """{
+                        "files": [
+                            {
+                                "pattern": "${ARTIFACT_NAME}",
+                                "target": "${ARTIFACTORY_GENERIC_REPO}/potentes-store-app/${VERSION}/"
+                            }
+                        ]
+                    }"""
+                    
+                    // Subir artefacto
+                    def buildInfo = server.upload(uploadSpec)
+                    
+                    // Agregar información del build
+                    buildInfo.name = 'potentes-store-app'
+                    buildInfo.number = env.BUILD_NUMBER
+                    buildInfo.env.capture = true
+                    buildInfo.env.collect()
+                    
+                    // Publicar build info
+                    server.publishBuildInfo(buildInfo)
+                    
+                    echo "Artefacto subido exitosamente: ${ARTIFACTORY_URL}/${ARTIFACTORY_GENERIC_REPO}/potentes-store-app/${VERSION}/${ARTIFACT_NAME}"
+                }
+            }
+        }
+
+        stage('Promote Build') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    echo 'Promoviendo build a repositorio de releases...'
+                    
+                    def server = Artifactory.server('artifactory-server')
+                    
+                    // Promoción a repositorio de releases
+                    def promotionConfig = [
+                        'buildName'  : 'potentes-store-app',
+                        'buildNumber': env.BUILD_NUMBER,
+                        'targetRepo' : 'generic-release-local',
+                        'comment'    : "Promoted from build ${env.BUILD_NUMBER}",
+                        'status'     : 'Released',
+                        'copy'       : true
+                    ]
+                    
+                    server.promote(promotionConfig)
+                    echo "Build promovido exitosamente a repositorio de releases"
+                }
             }
         }
     }
@@ -78,9 +145,18 @@ pipeline {
         }
         success {
             echo 'Build exitoso!'
+            echo "Artefacto disponible en Artifactory: ${ARTIFACTORY_URL}/${ARTIFACTORY_GENERIC_REPO}/potentes-store-app/${VERSION}/${ARTIFACT_NAME}"
         }
         failure {
             echo 'Build falló. Revisar logs para más detalles.'
+            // Limpiar artefactos parciales en caso de fallo
+            script {
+                try {
+                    bat "powershell \"if (Test-Path ${ARTIFACT_NAME}) { Remove-Item ${ARTIFACT_NAME} }\""
+                } catch (Exception e) {
+                    echo "No se pudo limpiar artefactos parciales: ${e.getMessage()}"
+                }
+            }
         }
     }
 }
