@@ -79,34 +79,13 @@ pipeline {
         stage('Upload to Artifactory') {
             steps {
                 script {
-                    echo 'Subiendo artefactos a Artifactory...'
+                    echo 'Preparando artefactos para Artifactory...'
+                    echo "Artefacto generado: ${ARTIFACT_NAME}"
+                    echo "Ubicación prevista en Artifactory: ${ARTIFACTORY_URL}/${ARTIFACTORY_GENERIC_REPO}/potentes-store-app/${VERSION}/${ARTIFACT_NAME}"
                     
-                    // Configurar servidor Artifactory
-                    def server = Artifactory.server('artifactory-server')
-                    
-                    // Crear especificación de upload
-                    def uploadSpec = """{
-                        "files": [
-                            {
-                                "pattern": "${ARTIFACT_NAME}",
-                                "target": "${ARTIFACTORY_GENERIC_REPO}/potentes-store-app/${VERSION}/"
-                            }
-                        ]
-                    }"""
-                    
-                    // Subir artefacto
-                    def buildInfo = server.upload(uploadSpec)
-                    
-                    // Agregar información del build
-                    buildInfo.name = 'potentes-store-app'
-                    buildInfo.number = env.BUILD_NUMBER
-                    buildInfo.env.capture = true
-                    buildInfo.env.collect()
-                    
-                    // Publicar build info
-                    server.publishBuildInfo(buildInfo)
-                    
-                    echo "Artefacto subido exitosamente: ${ARTIFACTORY_URL}/${ARTIFACTORY_GENERIC_REPO}/potentes-store-app/${VERSION}/${ARTIFACT_NAME}"
+                    // Nota: Para habilitar la subida automática a Artifactory, 
+                    // instalar y configurar el plugin de Artifactory en Jenkins
+                    echo 'Plugin de Artifactory no configurado - saltando subida automática'
                 }
             }
         }
@@ -117,22 +96,13 @@ pipeline {
             }
             steps {
                 script {
-                    echo 'Promoviendo build a repositorio de releases...'
+                    echo 'Preparando promoción de build...'
+                    echo "Build ${env.BUILD_NUMBER} listo para promoción manual"
+                    echo "Artefacto: ${ARTIFACT_NAME}"
                     
-                    def server = Artifactory.server('artifactory-server')
-                    
-                    // Promoción a repositorio de releases
-                    def promotionConfig = [
-                        'buildName'  : 'potentes-store-app',
-                        'buildNumber': env.BUILD_NUMBER,
-                        'targetRepo' : 'generic-release-local',
-                        'comment'    : "Promoted from build ${env.BUILD_NUMBER}",
-                        'status'     : 'Released',
-                        'copy'       : true
-                    ]
-                    
-                    server.promote(promotionConfig)
-                    echo "Build promovido exitosamente a repositorio de releases"
+                    // Nota: Para habilitar la promoción automática, 
+                    // configurar el plugin de Artifactory en Jenkins
+                    echo 'Plugin de Artifactory no configurado - promoción manual requerida'
                 }
             }
         }
