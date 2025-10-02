@@ -4,7 +4,11 @@ pipeline {
     tools {
         nodejs "node-20"
     }
-
+stage('Clean Workspace') {
+    steps {
+        deleteDir() // Limpia todo el workspace
+    }
+}
     stages {
         stage('Checkout') {
             steps {
@@ -13,11 +17,7 @@ pipeline {
                     credentialsId: 'Archivo Jenkins'
             }
         }
-        stage('Clean Workspace') {
-    steps {
-        deleteDir() // Limpia todo el workspace
-    }
-}
+        
         stage('Install Dependencies') {
             steps {
                 bat 'npm install'
