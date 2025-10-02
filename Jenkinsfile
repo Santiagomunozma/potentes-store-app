@@ -39,7 +39,14 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Instalando dependencias...'
-                bat 'npm ci --production=false'
+                script {
+                    // Intentar npm ci primero, si falla usar npm install
+                    def result = bat(script: 'npm ci --production=false', returnStatus: true)
+                    if (result != 0) {
+                        echo 'npm ci falló, usando npm install como respaldo...'
+                        bat 'npm install'
+                    }
+                }
             }
         }
 
