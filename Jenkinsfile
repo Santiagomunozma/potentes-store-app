@@ -10,7 +10,7 @@ pipeline {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/Santiagomunozma/potentes-store-app.git',
-                    credentialsId: 'Jenkinsfile'
+                    credentialsId: 'Archivo Jenkins'
             }
         }
         stage('Clean Workspace') {
