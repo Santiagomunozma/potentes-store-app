@@ -21,8 +21,6 @@ const AppLayout = () => {
         padding="xl"
         style={{
           backgroundColor: "white",
-          backgroundImage:
-            'url("https://www.transparenttextures.com/patterns/concrete-wall.png")',
           backgroundSize: "auto",
         }}
       >

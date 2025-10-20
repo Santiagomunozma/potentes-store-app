@@ -1,7 +1,21 @@
 import axios from "axios";
 
+// Función para obtener variables de entorno dinámicamente
+const getEnvVar = (key: string, defaultValue?: string): string => {
+  // Primero intentar desde window._env_ (variables de entorno en tiempo de ejecución)
+  if (typeof window !== "undefined" && (window as any)._env_) {
+    const envValue = (window as any)._env_[key];
+    if (envValue !== undefined) {
+      return envValue;
+    }
+  }
+
+  // Si no está disponible, usar import.meta.env (variables de entorno en tiempo de construcción)
+  return import.meta.env[key] || defaultValue || "";
+};
+
 const potentesApi = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: getEnvVar("VITE_API_URL", "http://localhost:3000/api"),
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",

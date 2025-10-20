@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  potentes-frontend:
+    build: .
+    ports:
+      - "3000:80"
+    environment:
+      # Configura aquí tus variables de entorno
+      - VITE_API_URL=http://localhost:8000/api
+      - VITE_APP_TITLE=Potentes Store
+      - VITE_APP_VERSION=1.0.0
+      - VITE_DEBUG=false
+    restart: unless-stopped
+    networks:
+      - potentes-network
+
+networks:
+  potentes-network:
+    driver: bridge
