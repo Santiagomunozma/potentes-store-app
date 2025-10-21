@@ -22,6 +22,20 @@ pipeline {
         script {
           def imageRepo = "potentes.jfrog.io/docker-dev/potentes-frontend:latest"
           def commitSha = env.GIT_COMMIT?.take(7) ?: "dev"
+          
+          // Instalar Docker si no está disponible
+          sh '''
+            if ! command -v docker &> /dev/null; then
+              echo "Instalando Docker..."
+              curl -fsSL https://get.docker.com -o get-docker.sh
+              sh get-docker.sh
+              sudo usermod -aG docker $USER
+              sudo systemctl start docker
+              sudo systemctl enable docker
+            fi
+            docker --version
+          '''
+          
           withCredentials([usernamePassword(credentialsId: 'jfrog', usernameVariable: 'username', passwordVariable: 'password')]) {
             sh "docker build -t ${imageRepo}:${commitSha} -t ${imageRepo}:staging ."
             sh "echo $password | docker login -u $username --password-stdin potentes.jfrog.io"
