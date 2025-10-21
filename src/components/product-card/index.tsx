@@ -51,7 +51,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   // Obtener tallas únicas disponibles
   const availableSizes = useMemo(() => {
-    return [...new Set(inventories.map((inv) => inv.size))];
+    const uniqueSizes = [...new Set(inventories.map((inv) => inv.size.size))];
+    return uniqueSizes
+      .map(
+        (sizeValue) =>
+          inventories.find((inv) => inv.size.size === sizeValue)?.size
+      )
+      .filter(Boolean);
   }, [inventories]);
 
   // Obtener colores disponibles para la talla seleccionada
@@ -84,7 +90,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
       setQuantity(1);
       return;
     }
-    const size = availableSizes.find((s) => s.size === sizeValue);
+    const size = availableSizes.find((s) => s?.size === sizeValue);
     if (size) {
       const sizeWithDateObjects = {
         ...size,
@@ -235,7 +241,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
               <Select
                 label="Talla"
                 placeholder="Selecciona una talla"
-                data={availableSizes.map((size) => size.size)}
+                data={availableSizes.map((size) => size?.size || "")}
                 value={selectedSize?.size}
                 onChange={handleSizeChange}
                 disabled={isOutOfStock}

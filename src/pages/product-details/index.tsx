@@ -45,7 +45,16 @@ const ProductDetailsView = () => {
 
   const availableSizes = useMemo(() => {
     if (!response?.data) return [];
-    return [...new Set(response.data.inventories.map((inv) => inv.size))];
+    const uniqueSizes = [
+      ...new Set(response.data.inventories.map((inv) => inv.size.size)),
+    ];
+    return uniqueSizes
+      .map(
+        (sizeValue) =>
+          response.data.inventories.find((inv) => inv.size.size === sizeValue)
+            ?.size
+      )
+      .filter(Boolean);
   }, [response?.data]);
 
   const availableColors = useMemo(() => {

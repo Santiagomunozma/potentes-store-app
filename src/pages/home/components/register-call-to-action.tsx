@@ -16,8 +16,6 @@ const RegisterCallToAction = () => {
       py={80}
       style={{
         backgroundColor: colors.primary[5],
-        backgroundImage:
-          'url("https://www.transparenttextures.com/patterns/debut-light.png")',
         backgroundSize: "auto",
         color: "white",
         textAlign: "center",
