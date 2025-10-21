@@ -39,12 +39,12 @@ pipeline {
       }
     }
     // Comentado temporalmente - Requiere instalar el plugin "AWS Steps" en Jenkins
-    // stage('Deploy to ECS') {
-    //   steps {
-    //     withAWS(credentials: 'aws-potentes', region: "us-east-2") {
-    //       sh "aws ecs update-service --cluster potente-cluster-prod --service potentes-frontend-service --force-new-deployment"
-    //     }
-    //   }
-    // }
+    stage('Deploy to ECS') {
+       steps {
+         withAWS(credentials: 'aws-potentes', region: "us-east-2") {
+           sh "aws ecs update-service --cluster potente-cluster-prod --service potentes-frontend-service --force-new-deployment"
+         }
+       }
+     }
   }
 }
