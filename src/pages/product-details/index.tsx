@@ -234,11 +234,11 @@ const ProductDetailsView = () => {
               <Stack gap="xs">
                 <Select
                   label="Talla"
-                  data={availableSizes.map((size) => size.size)}
+                  data={availableSizes.map((size) => size?.size || "")}
                   value={size?.size}
                   onChange={(value) => {
                     const selectedSize = availableSizes.find(
-                      (s) => s.size === value
+                      (s) => s?.size === value
                     );
                     if (selectedSize) {
                       const sizeWithDateObjects = {
