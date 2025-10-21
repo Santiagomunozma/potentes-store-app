@@ -40,20 +40,8 @@ pipeline {
     }
     stage('Deploy to ECS') {
       steps {
-        script {
-          // Instalar AWS CLI si no está disponible
-          sh '''
-            if ! command -v aws &> /dev/null; then
-              echo "Instalando AWS CLI..."
-              curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-              unzip -q awscliv2.zip
-              ./aws/install
-              rm -rf aws awscliv2.zip
-            fi
-            aws --version
-          '''
-        }
         withAWS(credentials: 'aws-potentes', region: "us-east-2") {
+          sh "aws --version"
           sh "aws ecs update-service --cluster potente-cluster-prod --service potentes-frontend-service --force-new-deployment"
         }
       }
