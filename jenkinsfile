@@ -21,7 +21,7 @@ pipeline {
     stage('Docker Build & Push') {
       steps {
         script {
-          def imageRepo = "potentes.jfrog.io/docker-dev/potentes-frontend:latest"
+          def imageRepo = "potentes.jfrog.io/docker-dev/potentes-frontend"
           def commitSha = env.GIT_COMMIT?.take(7) ?: "dev"
           
           // Verificar que Docker esté disponible
