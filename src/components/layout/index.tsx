@@ -17,7 +17,6 @@ const AppLayout = () => {
           breakpoint: "sm",
           collapsed: { desktop: true, mobile: !opened },
         }}
-        __size=""
         padding="xl"
         style={{
           backgroundColor: "white",
