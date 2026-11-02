@@ -8,6 +8,8 @@ type Product = {
   stock: number;
   price: number;
   status: string;
+  categoryId?: string | null;
+  category?: { id: string; name: string } | null;
   createdAt: string;
   updatedAt: string;
   inventories: {

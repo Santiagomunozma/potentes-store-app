@@ -16,6 +16,7 @@ interface CouponFormData {
   startDate: Date;
   endDate: Date;
   status: string;
+  maxUses?: number | null;
 }
 
 type CreateFormCouponsProps = {
@@ -53,7 +54,12 @@ const CreateFormCouponModal = ({
   }, [defaultValues, methods]);
 
   const onSubmit = (data: CouponFormData) => {
-    createCoupon(data, {
+    createCoupon(
+      {
+        ...data,
+        maxUses: data.maxUses ? Number(data.maxUses) : null,
+      },
+      {
       onSuccess: () => {
         close();
         methods.reset();
@@ -67,7 +73,8 @@ const CreateFormCouponModal = ({
           `${isEditing ? "Error al editar cupón" : "Error al crear cupón"}`
         );
       },
-    });
+      }
+    );
   };
 
   return (
@@ -93,6 +100,13 @@ const CreateFormCouponModal = ({
               label="Descuento (%)"
               placeholder="Ingrese el porcentaje de descuento"
               required
+              min={1}
+            />
+            <NumberInputField
+              control={methods.control}
+              name="maxUses"
+              label="Máximo de usos"
+              placeholder="Vacío = sin límite. 1 = un solo uso"
               min={1}
             />
             <DateInputField

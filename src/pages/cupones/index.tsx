@@ -35,6 +35,7 @@ const CouponsManagementPage = () => {
                   code: coupon.code,
                   discount: coupon.discount,
                   status: coupon.status,
+                  maxUses: coupon.maxUses ?? null,
                   startDate: coupon.startDate,
                   endDate: coupon.endDate,
                 }

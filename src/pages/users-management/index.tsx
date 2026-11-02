@@ -8,32 +8,9 @@ import {
   Title,
 } from "@mantine/core";
 import { Userstable } from "./components/users-table";
-import { StatsCards } from "../../components/stats-cards";
 import { CreateFormModal } from "./components/create-form-modal";
 import { useUserStore } from "./store";
-
-const stats = [
-  {
-    label: "Usuarios activos",
-    value: "1,248",
-    change: "+12.3%",
-  },
-  {
-    label: "Usuarios nuevos",
-    value: "156",
-    change: "+8.7%",
-  },
-  {
-    label: "Usuarios inactivos",
-    value: "324",
-    change: "-5.2%",
-  },
-  {
-    label: "Total usuarios",
-    value: "1,572",
-    change: "+9.4%",
-  },
-];
+import { UserStatsCards } from "./components/user-stats";
 
 const UsersManagementPage = () => {
   const { user, openFormModal, setOpenFormModal, setUser } = useUserStore();
@@ -78,7 +55,7 @@ const UsersManagementPage = () => {
           }
         />
 
-        <StatsCards stats={stats} />
+        <UserStatsCards />
 
         <Group justify="space-between" mb="md">
           <Tabs defaultValue="clients">

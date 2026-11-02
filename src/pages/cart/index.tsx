@@ -6,6 +6,7 @@ import {
   Container,
   Divider,
   Group,
+  NumberInput,
   Paper,
   Stack,
   Table,
@@ -13,6 +14,7 @@ import {
   Title,
   useMantineTheme,
 } from "@mantine/core";
+import { ProductImage } from "../../components/product-image";
 import {
   IconShoppingCart,
   IconTrash,
@@ -23,7 +25,8 @@ import { Link } from "@tanstack/react-router";
 import useCartStore from "../../store/useCart";
 
 const CartView = () => {
-  const { cart, subtotal, taxes, total, removeFromCart } = useCartStore();
+  const { cart, subtotal, taxes, total, removeFromCart, updateQuantity } =
+    useCartStore();
   const theme = useMantineTheme();
 
   return (
@@ -60,22 +63,42 @@ const CartView = () => {
                   {cart.map((item) => (
                     <Table.Tr key={item.id}>
                       <Table.Td>
-                        <Stack gap={4}>
-                          <Text fw={500}>{item.product.name}</Text>
-                          <Group gap={4}>
-                            <Badge color="primary" c="white" variant="filled">
-                              {item.color.color}
-                            </Badge>
-                            <Badge color="primary" variant="outline">
-                              {item.size.size}
-                            </Badge>
-                          </Group>
-                        </Stack>
+                        <Group wrap="nowrap">
+                          <ProductImage
+                            src={item.product.imageUrl}
+                            alt={item.product.name}
+                            w={64}
+                            h={64}
+                            radius="sm"
+                            fit="contain"
+                          />
+                          <Stack gap={4}>
+                            <Text fw={500}>{item.product.name}</Text>
+                            <Group gap={4}>
+                              <Badge color="primary" c="white" variant="filled">
+                                {item.color.color}
+                              </Badge>
+                              <Badge color="primary" variant="outline">
+                                {item.size.size}
+                              </Badge>
+                            </Group>
+                          </Stack>
+                        </Group>
                       </Table.Td>
                       <Table.Td>
                         ${item.product.price.toLocaleString("es-CO")}
                       </Table.Td>
-                      <Table.Td fw={500}>{item.quantity}</Table.Td>
+                      <Table.Td>
+                        <NumberInput
+                          value={item.quantity}
+                          min={1}
+                          max={item.maxStock}
+                          w={90}
+                          onChange={(value) =>
+                            updateQuantity(item.id ?? "", Number(value) || 1)
+                          }
+                        />
+                      </Table.Td>
                       <Table.Td fw={700}>
                         ${item.totalPrice.toLocaleString("es-CO")}
                       </Table.Td>

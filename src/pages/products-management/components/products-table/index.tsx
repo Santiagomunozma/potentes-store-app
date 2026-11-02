@@ -1,14 +1,16 @@
+import { useState } from "react";
 import {
   Badge,
   Button,
   Card,
+  Checkbox,
   Group,
-  Image,
   Loader,
   Menu,
   Stack,
   Table,
   Text,
+  TextInput,
 } from "@mantine/core";
 import { IconDotsVertical } from "@tabler/icons-react";
 import { useGetProducts } from "./service";
@@ -17,6 +19,7 @@ import { useProductStore } from "../../store";
 import { Product } from "../../../../types/product";
 import { useDeleteProduct } from "../create-form-modal/service";
 import toast from "react-hot-toast";
+import { ProductImage } from "../../../../components/product-image";
 
 const ProductsTable = () => {
   const { data: products, error, isSuccess, isError } = useGetProducts();
@@ -24,6 +27,8 @@ const ProductsTable = () => {
   const queryClient = useQueryClient();
 
   const { setProduct, setOpenFormModal } = useProductStore();
+  const [query, setQuery] = useState("");
+  const [onlyLow, setOnlyLow] = useState(false);
 
   const handleOpenEdit = (product: Product) => {
     setProduct(product);
@@ -47,38 +52,66 @@ const ProductsTable = () => {
   }
 
   if (isSuccess) {
+    const rows = products.data.filter((product) => {
+      const haystack = `${product.name} ${product.sku}`.toLowerCase();
+      const matchesQuery = haystack.includes(query.trim().toLowerCase());
+      const low = product.inventories?.some((item) => item.quantity <= 5);
+      return matchesQuery && (!onlyLow || low);
+    });
     return (
+      <Stack>
+        <Group>
+          <TextInput
+            placeholder="Buscar por nombre o SKU"
+            value={query}
+            onChange={(event) => setQuery(event.currentTarget.value)}
+            style={{ flex: 1 }}
+          />
+          <Checkbox
+            label="Solo stock bajo"
+            checked={onlyLow}
+            onChange={(event) => setOnlyLow(event.currentTarget.checked)}
+          />
+        </Group>
       <Card withBorder shadow="none" bg="white">
         <Table highlightOnHover verticalSpacing="sm">
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Producto</Table.Th>
               <Table.Th>SKU</Table.Th>
+              <Table.Th>Categoría</Table.Th>
               <Table.Th>Precio</Table.Th>
               <Table.Th>Estado</Table.Th>
               <Table.Th align="right"></Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {products.data.map((product) => (
+            {rows.map((product) => (
               <Table.Tr key={product.sku}>
                 <Table.Td>
                   <Group>
-                    <Image
+                    <ProductImage
                       src={product.imageUrl}
-                      width={40}
-                      height={40}
+                      alt={product.name}
+                      w={40}
+                      h={40}
                       radius="sm"
                     />
                     <Text>{product.name}</Text>
                   </Group>
                 </Table.Td>
                 <Table.Td>{product.sku}</Table.Td>
+                <Table.Td>{product.category?.name || "Sin categoría"}</Table.Td>
                 <Table.Td>{product.price}</Table.Td>
                 <Table.Td>
-                  <Badge color={product.status === "active" ? "green" : "red"}>
-                    {product.status === "active" ? "Disponible" : "Agotado"}
-                  </Badge>
+                  <Group gap="xs">
+                    <Badge color={product.status === "active" ? "green" : "gray"}>
+                      {product.status === "active" ? "Activo" : "Inactivo"}
+                    </Badge>
+                    {product.inventories?.some((item) => item.quantity <= 5) && (
+                      <Badge color="orange">Stock bajo</Badge>
+                    )}
+                  </Group>
                 </Table.Td>
                 <Table.Td align="right">
                   <Menu shadow="md" position="bottom-end" withArrow>
@@ -106,6 +139,7 @@ const ProductsTable = () => {
           </Table.Tbody>
         </Table>
       </Card>
+      </Stack>
     );
   }
 

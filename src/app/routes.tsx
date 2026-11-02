@@ -17,6 +17,8 @@ import CheckoutView from "../pages/checkout";
 import { UsersManagementPage } from "../pages/users-management";
 import PurchaseSuccessPage from "../pages/purchase-success";
 import { AdminRoute, EmployeeRoute } from "../components/protected-routes";
+import { AdminHomePage } from "../pages/admin";
+import { CategoriesPage } from "../pages/categories";
 import { PurchaseHistory } from "../pages/purchase-history";
 
 const rootRoute = createRootRoute({
@@ -143,11 +145,33 @@ const sizesRoute = createRoute({
   ),
 });
 
+const adminHomeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin",
+  component: () => (
+    <EmployeeRoute>
+      <AdminHomePage />
+    </EmployeeRoute>
+  ),
+});
+
+const categoriesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/categories",
+  component: () => (
+    <EmployeeRoute>
+      <CategoriesPage />
+    </EmployeeRoute>
+  ),
+});
+
 const routeTree = rootRoute.addChildren([
   homeRoute,
   productsRoute,
   aboutRoute,
   usersRoute,
+  adminHomeRoute,
+  categoriesRoute,
   productsManagementRoute,
   sellsManagementRoute,
   couponsRoute,

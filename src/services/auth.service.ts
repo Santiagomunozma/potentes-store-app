@@ -30,35 +30,11 @@ export const AuthService = {
   },
 
   getProfile: async (): Promise<User> => {
-    // Primero obtenemos los datos básicos del perfil
     const response = await potentesApi.get<{
-      success: boolean;
       data: User;
       message: string;
+      status: string;
     }>("/auth/profile");
-
-    // Verificamos si el usuario es de tipo Employee
-    if (response.data.data.userType === "Employee" && response.data.data.id) {
-      try {
-        // Intentamos obtener los datos específicos del empleado con un endpoint adicional si es necesario
-        // Si tu API ya incluye la información del empleado en la respuesta del perfil, puedes omitir esto
-        const employeeResponse = await potentesApi.get<{
-          success: boolean;
-          data: User;
-          message: string;
-        }>(`/employees/${response.data.data.id}`);
-
-        if (employeeResponse.data && employeeResponse.data.data) {
-          // Combinamos los datos del perfil con los datos del empleado
-          return {
-            ...response.data.data,
-            employee: employeeResponse.data.data.employee,
-          };
-        }
-      } catch (error) {
-        console.error("Error fetching employee details:", error);
-      }
-    }
 
     return response.data.data;
   },

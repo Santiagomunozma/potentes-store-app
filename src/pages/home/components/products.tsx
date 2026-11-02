@@ -27,7 +27,9 @@ const Products = () => {
         </Text>
         <Box py="xl" w="100%">
           <Grid gutter="lg">
-            {products?.data.map((product) => (
+            {products?.data
+              .filter((product) => product.status === "active")
+              .map((product) => (
               <Grid.Col key={product.sku} span={{ base: 12, md: 6, lg: 4 }}>
                 <ProductCard product={product} />
               </Grid.Col>

@@ -15,7 +15,7 @@ type Sell = {
   totalPrice: number; // Total price for the entire sell
   productSells: ProductSell[];
   createdAt?: string; // Fecha de creación
-  status?: "completed" | "pending" | "cancelled"; // Estado de la venta
+  status?: "paid" | "preparing" | "shipped" | "cancelled" | "completed" | "pending";
   orderNumber?: string; // Número de orden para referencia
 };
 

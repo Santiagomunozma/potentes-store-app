@@ -6,8 +6,12 @@ import { SelectField } from "../../../../components/inputs/select-input";
 import { useCreateProduct } from "./service";
 import InventoryManager from "./components/inventory-manager";
 import { useEffect } from "react";
+import { useWatch } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { useQuery } from "@tanstack/react-query";
+import { potentesApi } from "../../../../utils/api";
+import { ProductImage } from "../../../../components/product-image";
 
 interface ProductFormData {
   id?: string;
@@ -18,6 +22,7 @@ interface ProductFormData {
   careInstructions: string;
   price: number;
   status: string;
+  categoryId?: string | null;
   inventory: {
     color: string;
     size: string;
@@ -37,6 +42,15 @@ const CreateFormModal = ({
   defaultValues,
 }: CreateFormModalProps) => {
   const { mutate: createProduct, isPending } = useCreateProduct();
+  const { data: categories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const response = await potentesApi.get<{ data: { id: string; name: string }[] }>(
+        "/categories"
+      );
+      return response.data.data;
+    },
+  });
 
   const methods = useForm<ProductFormData>({
     defaultValues: {
@@ -53,6 +67,7 @@ const CreateFormModal = ({
 
   const isEditing = !!defaultValues;
   const queryClient = useQueryClient();
+  const imageUrl = useWatch({ control: methods.control, name: "imageUrl" });
 
   useEffect(() => {
     console.log("defaultValues", defaultValues);
@@ -75,7 +90,9 @@ const CreateFormModal = ({
   }, [defaultValues, methods]);
 
   const onSubmit = (data: ProductFormData) => {
-    createProduct(data, {
+    createProduct(
+      { ...data, categoryId: data.categoryId || null },
+      {
       onSuccess: () => {
         close();
         methods.reset();
@@ -89,7 +106,8 @@ const CreateFormModal = ({
           `${isEditing ? "Error al editar producto" : "Error al crear producto"}`
         );
       },
-    });
+      }
+    );
   };
 
   return (
@@ -124,6 +142,13 @@ const CreateFormModal = ({
               required
               pattern="https?://.+"
             />
+            <ProductImage
+              src={imageUrl}
+              alt="Vista previa del producto"
+              h={160}
+              fit="contain"
+              radius="md"
+            />
             <InventoryManager />
             <NumberInputField
               control={methods.control}
@@ -146,6 +171,17 @@ const CreateFormModal = ({
               label="Instrucciones de cuidado"
               placeholder="Ingrese las instrucciones de cuidado"
               required
+            />
+            <SelectField
+              name="categoryId"
+              control={methods.control}
+              label="Categoría"
+              placeholder="Seleccione la categoría"
+              options={(categories || []).map((category) => ({
+                value: category.id,
+                label: category.name,
+              }))}
+              clearable
             />
             <SelectField
               name="status"

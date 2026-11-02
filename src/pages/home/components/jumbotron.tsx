@@ -47,10 +47,8 @@ const Jumbotron = () => {
                   TIENDA DE ROPA
                 </Title>
                 <Text mt="md" c="dimmed">
-                  Introducing our innovative Double Layered Zipper Mask Hoodie –
-                  the epitome of functionality and style. Crafted from a robust
-                  blend of heavy-duty cotton, fleece, and polyester, this hoodie
-                  ensures durability and comfort.
+                  Ropa urbana para hombres y mujeres. Prendas con actitud,
+                  cortes limpios y detalles que se notan en la calle.
                 </Text>
               </Box>
             </Stack>
@@ -61,7 +59,7 @@ const Jumbotron = () => {
           <Box style={{ position: "relative" }}>
             <Image
               src={ImageJumbotron}
-              alt="Hoodie"
+              alt="Colección Potentes"
               fit="cover"
               w="100%"
               h="auto"

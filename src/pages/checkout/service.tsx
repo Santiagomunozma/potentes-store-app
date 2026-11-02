@@ -9,6 +9,8 @@ interface CouponResponse {
   startDate: string;
   endDate: string;
   status: string;
+  maxUses?: number | null;
+  usedCount?: number;
   createdAt: string;
   updatedAt: string;
 }

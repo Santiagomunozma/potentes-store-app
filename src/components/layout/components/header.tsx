@@ -18,6 +18,7 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import useCartStore from "../../../store/useCart";
 import useAuthStore from "../../../store/useAuth";
+import { AuthService } from "../../../services/auth.service";
 
 type HeaderProps = {
   opened: boolean;
@@ -39,6 +40,7 @@ const Header = ({ opened, toggle }: HeaderProps) => {
 
   const handleLogout = () => {
     logout();
+    AuthService.logout();
     navigate({ to: "/login" });
   };
 
@@ -96,6 +98,9 @@ const Header = ({ opened, toggle }: HeaderProps) => {
                       Usuarios
                     </Menu.Item>
                   )}
+                  <Menu.Item onClick={() => handleNavigation("/admin")}>
+                    Panel
+                  </Menu.Item>
                   <Menu.Item
                     onClick={() => handleNavigation("/products-management")}
                   >
@@ -114,6 +119,9 @@ const Header = ({ opened, toggle }: HeaderProps) => {
                   </Menu.Item>
                   <Menu.Item onClick={() => handleNavigation("/colors")}>
                     Colores
+                  </Menu.Item>
+                  <Menu.Item onClick={() => handleNavigation("/categories")}>
+                    Categorías
                   </Menu.Item>
                 </Menu.Dropdown>
               </Menu>
@@ -156,7 +164,7 @@ const Header = ({ opened, toggle }: HeaderProps) => {
             </ActionIcon>
           )}
           <Indicator
-            label={cart.length}
+            label={cart.reduce((sum, item) => sum + item.quantity, 0)}
             size={20}
             color="primary"
             disabled={cart.length === 0}

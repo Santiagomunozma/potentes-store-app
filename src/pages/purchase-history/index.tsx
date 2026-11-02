@@ -12,12 +12,12 @@ import {
   Stack,
   Accordion,
   Card,
-  Image,
   Box,
   Flex,
   Space,
 } from "@mantine/core";
 import { SellsService } from "../../services/sells.service";
+import { ProductImage } from "../../components/product-image";
 import { Sell } from "../../types/sells";
 import {
   IconAlertCircle,
@@ -147,10 +147,21 @@ export function PurchaseHistory() {
     fetchPurchaseHistory();
   }, []);
 
+  const statusText: Record<string, string> = {
+    paid: "Pagado",
+    preparing: "Preparando",
+    shipped: "Enviado",
+    cancelled: "Anulado",
+    completed: "Pagado",
+    pending: "Pendiente",
+  };
+
   const getStatusBadgeColor = (status?: string) => {
     switch (status) {
+      case "shipped":
       case "completed":
         return "green";
+      case "preparing":
       case "pending":
         return "yellow";
       case "cancelled":
@@ -260,7 +271,7 @@ export function PurchaseHistory() {
                   </Group>
                   <Group gap="xs">
                     <Badge color={getStatusBadgeColor(purchase.status)}>
-                      {purchase.status || "completed"}
+                      {statusText[purchase.status || "paid"] || purchase.status || "Pagado"}
                     </Badge>
                     <Text fw={600}>
                       {formatCurrency(purchase.totalPrice || 0)}
@@ -313,31 +324,14 @@ export function PurchaseHistory() {
                         }
                       >
                         <Box style={{ minWidth: 100, minHeight: 100 }}>
-                          {productSell.product?.imageUrl ? (
-                            <Image
-                              src={productSell.product.imageUrl}
-                              alt={productSell.product?.name || "Producto"}
-                              height={100}
-                              width={100}
-                              fit="cover"
-                              radius="md"
-                            />
-                          ) : (
-                            <Flex
-                              h={100}
-                              w={100}
-                              bg="gray.1"
-                              align="center"
-                              justify="center"
-                              style={{ borderRadius: "8px" }}
-                            >
-                              <IconPackage
-                                size={40}
-                                color="gray"
-                                opacity={0.3}
-                              />
-                            </Flex>
-                          )}
+                          <ProductImage
+                            src={productSell.product?.imageUrl}
+                            alt={productSell.product?.name || "Producto"}
+                            h={100}
+                            w={100}
+                            fit="contain"
+                            radius="md"
+                          />
                         </Box>
 
                         <Box

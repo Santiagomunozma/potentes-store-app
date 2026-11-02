@@ -40,7 +40,9 @@ const AboutUsUrban = () => {
                   Sobre Nosotros
                 </Title>
                 <Text c="gray.5" size="md" lh="1.6">
-                  En <strong>POTENTES</strong>, cstiven es como medio gray
+                  En <strong>POTENTES</strong> diseñamos ropa urbana para
+                  quienes quieren verse con actitud, sin dejar de ser ellos
+                  mismos.
                 </Text>
                 <Text c="gray.5" size="md" lh="1.6">
                   Desde 2023, venimos rompiendo esquemas con colecciones que

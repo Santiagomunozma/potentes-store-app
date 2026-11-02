@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   Group,
-  Image,
   Stack,
   Text,
   Title,
@@ -14,6 +13,7 @@ import {
   Grid,
   NumberInput,
 } from "@mantine/core";
+import { ProductImage } from "../product-image";
 import { IconShoppingCart, IconInfoCircle } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Product } from "../../types/product";
@@ -126,12 +126,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
     if (!selectedSize || !selectedColor) return;
 
     const productSell: ProductSell = {
-      id: `${id}-${selectedSize.size}-${selectedColor.color}-${Date.now()}`,
+      id: `${id}-${selectedSize.id}-${selectedColor.id}`,
       product,
       quantity,
       color: selectedColor,
       size: selectedSize,
       totalPrice: price * quantity,
+      maxStock: availableStock,
     };
 
     addToCart(productSell);
@@ -161,7 +162,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           style={{ position: "relative", cursor: "pointer" }}
           onClick={handleNavigateToDetails}
         >
-          <Image
+          <ProductImage
             src={imageUrl}
             alt={name}
             radius="md"

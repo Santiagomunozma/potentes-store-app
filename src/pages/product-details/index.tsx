@@ -6,7 +6,6 @@ import {
   Divider,
   Grid,
   Group,
-  Image,
   NumberInput,
   Select,
   Stack,
@@ -26,10 +25,10 @@ import { useState, useMemo } from "react";
 import { useGetProductDetails } from "./service";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import useCartStore from "../../store/useCart";
-import { ProductSell } from "../../types/product-sell";
 import { Color } from "../../types/colors";
 import { Size } from "../../types/sizes";
 import toast from "react-hot-toast";
+import { ProductImage } from "../../components/product-image";
 
 const ProductDetailsView = () => {
   const navigate = useNavigate();
@@ -38,7 +37,7 @@ const ProductDetailsView = () => {
   const [color, setColor] = useState<Color | null>(null);
   const [size, setSize] = useState<Size | null>(null);
 
-  const { addToCart, cart, removeFromCart } = useCartStore();
+  const { addToCart, cart } = useCartStore();
 
   const { id } = useParams({ from: "/product-details/$id" });
   const { data: response, isLoading } = useGetProductDetails(id);
@@ -81,64 +80,46 @@ const ProductDetailsView = () => {
   const handleAddToCart = () => {
     if (!response?.data || !size || !color) return;
 
-    // Validamos si el producto ya esta en el carro
     const productInCart = cart.find(
-      (product) =>
-        product.product.id === response.data.id &&
-        product.color.color === color.color &&
-        product.size.size === size.size
+      (item) =>
+        item.product.id === response.data.id &&
+        item.color.id === color.id &&
+        item.size.id === size.id
     );
 
-    if (productInCart) {
-      // Si el producto ya esta en el carro, actualizamos la cantidad
-      const updatedProduct = {
-        ...productInCart,
-        quantity: productInCart.quantity + quantity,
-      };
-
-      // Validamos disponibilidad en el inventario
-      if (updatedProduct.quantity > availableStock) {
-        toast.error("No hay suficiente stock");
-        return;
-      }
-
-      removeFromCart(productInCart);
-      addToCart(updatedProduct);
+    if ((productInCart?.quantity ?? 0) + quantity > availableStock) {
+      toast.error("No hay suficiente stock");
       return;
     }
 
-    // Si el producto no esta en el carro, lo agregamos
-    const productSell: ProductSell = {
-      id: `${response.data.id}-${size}-${color}-${Date.now()}`,
+    addToCart({
+      id: `${response.data.id}-${size.id}-${color.id}`,
       product: response.data,
       quantity,
       color,
       size,
       totalPrice: response.data.price * quantity,
-    };
-
-    // Validamos disponibilidad en el inventario
-    if (productSell.quantity > availableStock) {
-      toast.error("No hay suficiente stock");
-      return;
-    }
-
-    addToCart(productSell);
+      maxStock: availableStock,
+    });
   };
 
   const handleBuyNow = () => {
     if (!response?.data || !size || !color) return;
 
-    const productSell: ProductSell = {
-      id: `${response.data.id}-${size}-${color}-${Date.now()}`,
+    if (quantity > availableStock) {
+      toast.error("No hay suficiente stock");
+      return;
+    }
+
+    addToCart({
+      id: `${response.data.id}-${size.id}-${color.id}`,
       product: response.data,
       quantity,
       color,
       size,
       totalPrice: response.data.price * quantity,
-    };
-
-    addToCart(productSell);
+      maxStock: availableStock,
+    });
     navigate({ to: "/checkout" });
   };
 
@@ -197,7 +178,7 @@ const ProductDetailsView = () => {
         <Grid gutter="xl">
           <Grid.Col span={{ base: 12, md: 6 }}>
             <Stack>
-              <Image
+              <ProductImage
                 src={product.imageUrl}
                 alt={product.name}
                 radius="md"
@@ -213,7 +194,9 @@ const ProductDetailsView = () => {
           <Grid.Col span={{ base: 12, md: 6 }}>
             <Stack gap="sm">
               <Group>
-                <Badge variant="filled">{product.status}</Badge>
+                <Badge variant="filled" color={product.status === "active" ? "green" : "gray"}>
+                  {product.status === "active" ? "Activo" : "No disponible"}
+                </Badge>
               </Group>
 
               <Title order={2} fw={900}>
@@ -295,7 +278,12 @@ const ProductDetailsView = () => {
                   variant="outline"
                   size="lg"
                   onClick={handleAddToCart}
-                  disabled={!size || !color || availableStock === 0}
+                  disabled={
+                    product.status !== "active" ||
+                    !size ||
+                    !color ||
+                    availableStock === 0
+                  }
                 >
                   Agregar al carrito
                 </Button>
@@ -303,7 +291,12 @@ const ProductDetailsView = () => {
                   leftSection={<IconBolt size={18} />}
                   size="lg"
                   onClick={handleBuyNow}
-                  disabled={!size || !color || availableStock === 0}
+                  disabled={
+                    product.status !== "active" ||
+                    !size ||
+                    !color ||
+                    availableStock === 0
+                  }
                 >
                   Comprar ahora
                 </Button>

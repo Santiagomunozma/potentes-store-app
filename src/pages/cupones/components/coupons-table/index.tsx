@@ -74,7 +74,10 @@ const CouponsTable = () => {
                 <Table.Td>
                   {dayjs(coupon.endDate).format("DD/MM/YYYY")}
                 </Table.Td>
-                <Table.Td>{0}</Table.Td>
+                <Table.Td>
+                  {coupon.usedCount ?? 0}
+                  {coupon.maxUses ? ` / ${coupon.maxUses}` : " / sin límite"}
+                </Table.Td>
                 <Table.Td>
                   <Badge color={coupon.status === "active" ? "green" : "gray"}>
                     {coupon.status === "active" ? "Activo" : "Inactivo"}

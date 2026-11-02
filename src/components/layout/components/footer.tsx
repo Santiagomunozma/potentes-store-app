@@ -41,7 +41,7 @@ const Footer = () => {
         <Divider my="xl" />
 
         <Group justify="space-between" gap="xs" fz="xs">
-          <Text c="dimmed">© 2025 Potentes. All Rights Reserved.</Text>
+          <Text c="dimmed">© 2026 Potentes. All Rights Reserved.</Text>
           <Group gap="sm">
             <Anchor href="#" c="primary">
               Terms of Service

@@ -16,22 +16,23 @@ import { AuthService } from "../services/auth.service";
 const queryClient = new QueryClient();
 
 const Providers = () => {
-  const { setUser } = useAuthStore();
+  const { setUser, finishHydration } = useAuthStore();
 
-  // Initialize auth state on app load
   useEffect(() => {
-    if (AuthService.isAuthenticated()) {
-      // Fetch current user data
-      AuthService.getProfile()
-        .then((profileData) => {
-          setUser(profileData);
-        })
-        .catch(() => {
-          // If token is invalid or expired, clear it
-          AuthService.logout();
-        });
+    if (!AuthService.isAuthenticated()) {
+      finishHydration();
+      return;
     }
-  }, [setUser]);
+
+    AuthService.getProfile()
+      .then((profileData) => {
+        setUser(profileData);
+      })
+      .catch(() => {
+        AuthService.logout();
+        finishHydration();
+      });
+  }, [setUser, finishHydration]);
 
   return (
     <QueryClientProvider client={queryClient}>

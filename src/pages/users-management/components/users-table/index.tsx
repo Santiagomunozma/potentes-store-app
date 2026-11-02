@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Avatar,
   Button,
@@ -8,6 +9,7 @@ import {
   Stack,
   Table,
   Text,
+  TextInput,
 } from "@mantine/core";
 import { IconDotsVertical } from "@tabler/icons-react";
 import { useGetUsers } from "./service";
@@ -21,6 +23,7 @@ const Userstable = () => {
   const { data: users, error, isSuccess, isError } = useGetUsers();
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser();
   const queryClient = useQueryClient();
+  const [query, setQuery] = useState("");
 
   const { setUser, setOpenFormModal } = useUserStore();
 
@@ -46,7 +49,17 @@ const Userstable = () => {
   }
 
   if (isSuccess) {
+    const rows = users.data.filter((user) => {
+      const haystack = `${user.firstName} ${user.lastName} ${user.email}`.toLowerCase();
+      return haystack.includes(query.trim().toLowerCase());
+    });
     return (
+      <Stack>
+        <TextInput
+          placeholder="Buscar por nombre o correo"
+          value={query}
+          onChange={(event) => setQuery(event.currentTarget.value)}
+        />
       <Card withBorder shadow="none" bg="white">
         <Table highlightOnHover verticalSpacing="sm">
           <Table.Thead>
@@ -60,7 +73,7 @@ const Userstable = () => {
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {users.data.map((user) => (
+            {rows.map((user) => (
               <Table.Tr key={user.email}>
                 <Table.Td>
                   <Group>
@@ -69,8 +82,8 @@ const Userstable = () => {
                   </Group>
                 </Table.Td>
                 <Table.Td>{user.email}</Table.Td>
-                <Table.Td>{""}</Table.Td>
-                <Table.Td>{""}</Table.Td>
+                <Table.Td>{user.purchaseCount ?? 0}</Table.Td>
+                <Table.Td>{user.salesCount ?? 0}</Table.Td>
                 <Table.Td>{user.userType}</Table.Td>
                 <Table.Td align="right">
                   <Menu shadow="md" position="bottom-end" withArrow>
@@ -98,12 +111,13 @@ const Userstable = () => {
           </Table.Tbody>
         </Table>
       </Card>
+      </Stack>
     );
   }
   return (
     <Stack align="center" justify="center" py="xl">
       <Loader size="lg" color="green" />
-      <Text>Cargando productos...</Text>
+      <Text>Cargando usuarios...</Text>
     </Stack>
   );
 };

@@ -9,6 +9,7 @@ type ProductSell = {
   color: Color;
   size: Size;
   totalPrice: number;
+  maxStock?: number;
 };
 
 export type { ProductSell };

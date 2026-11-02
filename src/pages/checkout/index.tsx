@@ -15,6 +15,9 @@ import {
   Tabs,
   Alert,
   TextInput,
+  Modal,
+  Select,
+  Radio,
 } from "@mantine/core";
 import {
   IconArrowLeft,
@@ -27,7 +30,7 @@ import {
 import { Link, useNavigate } from "@tanstack/react-router";
 import useCartStore from "../../store/useCart";
 import useAuthStore from "../../store/useAuth";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { TextInputField } from "../../components/inputs/text-input";
 import { PasswordInputField } from "../../components/inputs/password-input";
@@ -39,6 +42,8 @@ import toast from "react-hot-toast";
 import { RegisterFormData as RegisterFormDataType } from "../register/index";
 import { useCreateSell, useValidateCoupon } from "./service";
 import { SellsService } from "../../services/sells.service";
+import { TAX_RATE } from "../../app/constants";
+import { CardPreview } from "./card-preview";
 
 // Import types
 interface LoginFormData {
@@ -60,7 +65,7 @@ interface RegisterFormData {
 }
 
 const CheckoutView = () => {
-  const { cart, subtotal, taxes, total, clearCart } = useCartStore();
+  const { cart, subtotal, clearCart } = useCartStore();
   const { user, isAuthenticated, setUser } = useAuthStore();
   const theme = useMantineTheme();
   const navigate = useNavigate();
@@ -70,8 +75,26 @@ const CheckoutView = () => {
   const [showAuthOptions, setShowAuthOptions] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [couponCode, setCouponCode] = useState("");
-  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponPercent, setCouponPercent] = useState(0);
   const [couponError, setCouponError] = useState("");
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [cardName, setCardName] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+  const [cvvFocused, setCvvFocused] = useState(false);
+  const [pseBank, setPseBank] = useState<string | null>(null);
+  const [nequiPhone, setNequiPhone] = useState("");
+  const [paymentError, setPaymentError] = useState("");
+
+  const discountAmount = useMemo(
+    () => subtotal * (couponPercent / 100),
+    [subtotal, couponPercent]
+  );
+  const discountedSubtotal = Math.max(subtotal - discountAmount, 0);
+  const payableTaxes = discountedSubtotal * TAX_RATE;
+  const payableTotal = discountedSubtotal + payableTaxes;
 
   // Form for login
   const loginMethods = useForm<LoginFormData>({
@@ -131,7 +154,7 @@ const CheckoutView = () => {
           });
       },
       onError: () => {
-        toast.error("Error al iniciar sesión, verifica tus datos");
+        toast.error("Correo o contraseña incorrectos.");
       },
     });
   };
@@ -198,47 +221,75 @@ const CheckoutView = () => {
 
     validateCoupon(couponCode, {
       onSuccess: (coupon) => {
-        if (coupon.status === "active") {
-          setCouponDiscount(coupon.discount);
-          toast.success("¡Cupón aplicado correctamente!");
+        if (!coupon) {
+          setCouponError("Cupón no encontrado");
+          setCouponPercent(0);
+          return;
+        }
+
+        const now = new Date();
+        const starts = new Date(coupon.startDate);
+        const ends = new Date(coupon.endDate);
+        const isCurrent = now >= starts && now <= ends;
+
+        const exhausted =
+          coupon.maxUses != null && (coupon.usedCount || 0) >= coupon.maxUses;
+
+        if (exhausted) {
+          setCouponError("Este cupón ya alcanzó el máximo de usos");
+          setCouponPercent(0);
+          return;
+        }
+
+        if (coupon.status === "active" && isCurrent && coupon.discount > 0) {
+          setCouponPercent(coupon.discount);
+          toast.success("Cupón aplicado al subtotal");
         } else {
-          setCouponError("Cupón no válido o inactivo");
-          setCouponDiscount(0);
+          setCouponError("Cupón inactivo o fuera de vigencia");
+          setCouponPercent(0);
         }
       },
       onError: (err) => {
         console.error("Error validating coupon:", err);
-        setCouponError("Error al validar el cupón");
-        setCouponDiscount(0);
+        setCouponPercent(0);
       },
     });
   };
 
-  const handleConfirmPayment = () => {
-    if (isAuthenticated && user?.customer?.id) {
-      setIsProcessingPayment(true);
+  const registerSale = () => {
+    if (!user?.customer?.id) return;
+    setIsProcessingPayment(true);
 
       const sellData = {
         customerId: user.customer.id,
-        totalPrice: total - couponDiscount,
+        totalPrice: payableTotal,
         products: SellsService.formatCartItemsForAPI(cart),
-        couponCode: couponDiscount > 0 ? couponCode : undefined,
+        couponCode: couponPercent > 0 ? couponCode : undefined,
       };
 
       createSell(sellData, {
         onSuccess: () => {
-          toast.success("¡Compra realizada con éxito!");
+          setCardNumber("");
+          setCardCvv("");
+          setPaymentOpen(false);
+          toast.success("Pago de prueba aprobado. Compra registrada.");
           clearCart();
-          navigate({ to: "/purchase-success" });
+          navigate({ to: "/purchase-history" });
         },
         onError: (error) => {
           setIsProcessingPayment(false);
           console.error("Error al registrar la venta:", error);
           toast.error(
-            "Hubo un error al procesar tu compra. Por favor intenta nuevamente."
+            "El pago de prueba se aprobó, pero no se pudo registrar la compra."
           );
         },
       });
+  };
+
+  const handleConfirmPayment = () => {
+    if (isAuthenticated && user?.customer?.id) {
+      setPaymentError("");
+      setPaymentOpen(true);
     } else if (isAuthenticated && !user?.customer?.id) {
       toast.error(
         "Tu cuenta no está configurada como cliente. Por favor contacta a soporte."
@@ -250,6 +301,36 @@ const CheckoutView = () => {
         "Por favor inicia sesión o regístrate para completar la compra"
       );
     }
+  };
+
+  const handleSimulatedPayment = () => {
+    setPaymentError("");
+
+    if (paymentMethod === "card") {
+      const digits = cardNumber.replace(/\D/g, "");
+      const expiryOk = /^(0[1-9]|1[0-2])\/\d{2}$/.test(cardExpiry);
+      if (cardName.trim().length < 3 || digits.length < 13 || !expiryOk || cardCvv.length < 3) {
+        setPaymentError("Completa los datos de la tarjeta. El número de prueba puede ser 4242424242424242.");
+        return;
+      }
+      if (digits.endsWith("0000")) {
+        setPaymentError("Pago rechazado. Esta tarjeta de prueba no tiene fondos.");
+        return;
+      }
+    }
+
+    if (paymentMethod === "pse" && !pseBank) {
+      setPaymentError("Elige el banco para el débito de prueba.");
+      return;
+    }
+
+    if (paymentMethod === "nequi" && nequiPhone.replace(/\D/g, "").length < 10) {
+      setPaymentError("Ingresa un celular de 10 dígitos para Nequi de prueba.");
+      return;
+    }
+
+    setCardCvv("");
+    registerSale();
   };
 
   // Si el carrito está vacío, mostrar mensaje y botón para ir a productos
@@ -594,14 +675,14 @@ const CheckoutView = () => {
                 <Group justify="space-between">
                   <Text size="lg">IVA (19%):</Text>
                   <Text fw={700} size="lg">
-                    ${taxes.toLocaleString("es-CO")}
+                    ${payableTaxes.toLocaleString("es-CO")}
                   </Text>
                 </Group>
-                {couponDiscount > 0 && (
+                {discountAmount > 0 && (
                   <Group justify="space-between">
-                    <Text size="lg">Descuento:</Text>
+                    <Text size="lg">Descuento ({couponPercent}%):</Text>
                     <Text fw={700} size="lg" c="green">
-                      -${couponDiscount.toLocaleString("es-CO")}
+                      -${discountAmount.toLocaleString("es-CO")}
                     </Text>
                   </Group>
                 )}
@@ -611,7 +692,7 @@ const CheckoutView = () => {
                     Total:
                   </Text>
                   <Text fw={700} size="xl" c={theme.primaryColor}>
-                    ${(total - couponDiscount).toLocaleString("es-CO")}
+                    ${payableTotal.toLocaleString("es-CO")}
                   </Text>
                 </Group>
 
@@ -661,6 +742,128 @@ const CheckoutView = () => {
           </Grid.Col>
         </Grid>
       </Container>
+
+      <Modal
+        opened={paymentOpen}
+        onClose={() => {
+          if (isProcessingPayment || isCreatingSell) return;
+          setPaymentOpen(false);
+          setCardCvv("");
+        }}
+        title="Pago de prueba"
+        centered
+        size="md"
+      >
+        <Stack>
+          <Alert color="yellow" icon={<IconAlertCircle />}>
+            Simulación. No se cobra dinero real y el número de la tarjeta no se
+            guarda. Para ver un rechazo, termina la tarjeta en 0000.
+          </Alert>
+
+          <Radio.Group
+            label="Medio de pago"
+            value={paymentMethod}
+            onChange={setPaymentMethod}
+          >
+            <Group mt="xs">
+              <Radio value="card" label="Tarjeta" />
+              <Radio value="pse" label="PSE" />
+              <Radio value="nequi" label="Nequi" />
+            </Group>
+          </Radio.Group>
+
+          {paymentMethod === "card" && (
+            <Stack>
+              <CardPreview
+                name={cardName}
+                number={cardNumber}
+                expiry={cardExpiry}
+                cvv={cardCvv}
+                flipped={cvvFocused}
+              />
+              <TextInput
+                label="Nombre en la tarjeta"
+                value={cardName}
+                onChange={(event) => setCardName(event.currentTarget.value)}
+              />
+              <TextInput
+                label="Número"
+                placeholder="4242424242424242"
+                value={cardNumber}
+                onChange={(event) =>
+                  setCardNumber(
+                    event.currentTarget.value.replace(/\D/g, "").slice(0, 16)
+                  )
+                }
+                maxLength={16}
+              />
+              <Group grow>
+                <TextInput
+                  label="Vence"
+                  placeholder="MM/AA"
+                  value={cardExpiry}
+                  onChange={(event) => {
+                    const digits = event.currentTarget.value
+                      .replace(/\D/g, "")
+                      .slice(0, 4);
+                    const formatted =
+                      digits.length > 2
+                        ? `${digits.slice(0, 2)}/${digits.slice(2)}`
+                        : digits;
+                    setCardExpiry(formatted);
+                  }}
+                  maxLength={5}
+                />
+                <TextInput
+                  label="CVV"
+                  value={cardCvv}
+                  onFocus={() => setCvvFocused(true)}
+                  onBlur={() => setCvvFocused(false)}
+                  onChange={(event) =>
+                    setCardCvv(event.currentTarget.value.replace(/\D/g, "").slice(0, 4))
+                  }
+                  maxLength={4}
+                />
+              </Group>
+            </Stack>
+          )}
+
+          {paymentMethod === "pse" && (
+            <Select
+              label="Banco"
+              placeholder="Elige un banco"
+              data={["Bancolombia", "Davivienda", "BBVA", "Nequi"]}
+              value={pseBank}
+              onChange={setPseBank}
+            />
+          )}
+
+          {paymentMethod === "nequi" && (
+            <TextInput
+              label="Celular Nequi"
+              placeholder="3001234567"
+              value={nequiPhone}
+              onChange={(event) =>
+                setNequiPhone(event.currentTarget.value.replace(/\D/g, "").slice(0, 10))
+              }
+            />
+          )}
+
+          {paymentError && (
+            <Text c="red" size="sm">
+              {paymentError}
+            </Text>
+          )}
+
+          <Button
+            onClick={handleSimulatedPayment}
+            loading={isProcessingPayment || isCreatingSell}
+            leftSection={<IconCreditCard size={16} />}
+          >
+            Pagar ${payableTotal.toLocaleString("es-CO")}
+          </Button>
+        </Stack>
+      </Modal>
     </Box>
   );
 };

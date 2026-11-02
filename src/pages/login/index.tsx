@@ -1,4 +1,5 @@
 import {
+  Alert,
   Anchor,
   Box,
   Button,
@@ -8,8 +9,10 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { IconAlertCircle } from "@tabler/icons-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import { useLogin } from "./service";
 import { FormProvider, useForm } from "react-hook-form";
 import { TextInputField } from "../../components/inputs/text-input";
@@ -18,64 +21,33 @@ import { PasswordInputField } from "../../components/inputs/password-input";
 import useAuthStore from "../../store/useAuth";
 import { AuthService } from "../../services/auth.service";
 
-const ForgotPassword = () => {
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const res = await fetch(
-        "http://localhost:3000/api/auth/forgot-password",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
-      );
-
-      const data = await res.json();
-      setMessage(data.message || "Enlace enviado a tu correo.");
-    } catch {
-      setMessage("Ocurrió un error. Intenta nuevamente.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div>
-      <h2>Recuperar contraseña</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Tu correo"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
-        />
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? "Enviando..." : "Enviar enlace"}
-        </button>
-      </form>
-      <p>{message}</p>
-    </div>
-  );
-};
-
 interface LoginFormData {
   email: string;
   password: string;
 }
 
+const loginFailureMessage = (error: unknown) => {
+  if (!axios.isAxiosError(error) || !error.response) {
+    return "No se pudo conectar con el servidor. Revisa que la tienda y la API estén encendidas.";
+  }
+
+  if (error.response.status === 401) {
+    return "Correo o contraseña incorrectos.";
+  }
+
+  const apiMessage = error.response.data?.error;
+  if (typeof apiMessage === "string" && apiMessage.trim()) {
+    return apiMessage;
+  }
+
+  return "No se pudo iniciar sesión. Intenta de nuevo.";
+};
+
 const LoginView = () => {
   const navigate = useNavigate();
   const { mutate: login, isPending } = useLogin();
   const { setUser, isAuthenticated } = useAuthStore();
+  const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -92,18 +64,20 @@ const LoginView = () => {
   });
 
   const onSubmit = (data: LoginFormData) => {
+    setLoginError("");
+
     if (!data.email || !data.password) {
-      toast.error("Por favor completa todos los campos");
+      setLoginError("Completa el correo y la contraseña.");
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-      toast.error("Ingresa un correo electrónico válido");
+      setLoginError("Ingresa un correo electrónico válido.");
       return;
     }
 
     if (data.password.length < 6) {
-      toast.error("La contraseña debe tener al menos 6 caracteres");
+      setLoginError("La contraseña debe tener al menos 6 caracteres.");
       return;
     }
 
@@ -145,8 +119,10 @@ const LoginView = () => {
             navigate({ to: "/" });
           });
       },
-      onError: () => {
-        toast.error("Error al iniciar sesión, verifica tus datos");
+      onError: (error) => {
+        const message = loginFailureMessage(error);
+        setLoginError(message);
+        toast.error(message);
       },
     });
   };
@@ -165,6 +141,16 @@ const LoginView = () => {
                   Bienvenido de nuevo a <strong>POTENTES</strong>. Ingresa tus
                   datos para continuar.
                 </Text>
+
+                {loginError && (
+                  <Alert
+                    color="red"
+                    icon={<IconAlertCircle size={18} />}
+                    title="No pudimos iniciar sesión"
+                  >
+                    {loginError}
+                  </Alert>
+                )}
 
                 <TextInputField
                   control={methods.control}
@@ -215,4 +201,3 @@ const LoginView = () => {
 };
 
 export default LoginView;
-export { ForgotPassword };

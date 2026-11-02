@@ -77,6 +77,7 @@ const Navbar = () => {
           {isAdmin && (
             <NavLink component={Link} label="Usuarios" href="/users" />
           )}
+          <NavLink component={Link} label="Panel" href="/admin" />
           {/* Ambos tipos de empleados pueden ver estas secciones */}
           <NavLink
             component={Link}
@@ -86,6 +87,7 @@ const Navbar = () => {
           <NavLink component={Link} label="Ventas" href="/sells-management" />
           <NavLink component={Link} label="Cupones" href="/coupons" />
           <NavLink component={Link} label="Colores" href="/colors" />
+          <NavLink component={Link} label="Categorías" href="/categories" />
           <NavLink component={Link} label="Tallas" href="/sizes" />
         </NavLink>
       )}

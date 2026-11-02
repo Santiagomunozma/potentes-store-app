@@ -13,6 +13,8 @@ type User = {
 
   customer?: Customer;
   employee?: Employee;
+  purchaseCount?: number;
+  salesCount?: number;
 };
 
 type Customer = {

@@ -39,6 +39,7 @@ const ProductsManagementPage = () => {
                   sku: product.sku,
                   price: product.price,
                   status: product.status,
+                  categoryId: product.categoryId || product.category?.id || null,
                   inventory: product.inventories
                     ? product.inventories.map((inventory) => ({
                         color: inventory.color.id,

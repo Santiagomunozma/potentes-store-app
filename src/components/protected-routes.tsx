@@ -13,16 +13,16 @@ interface RoleProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isHydrating } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isHydrating && !isAuthenticated) {
       navigate({ to: "/login" });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isHydrating, navigate]);
 
-  if (!isAuthenticated) {
+  if (isHydrating || !isAuthenticated) {
     return null;
   }
 
@@ -34,10 +34,12 @@ export const RoleProtectedRoute = ({
   allowedUserTypes = [],
   allowedEmployeeTypes = [],
 }: RoleProtectedRouteProps) => {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, isHydrating, user } = useAuthStore();
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (isHydrating) return;
+
     if (!isAuthenticated) {
       navigate({ to: "/login" });
     } else if (user) {
@@ -59,9 +61,9 @@ export const RoleProtectedRoute = ({
         navigate({ to: "/" });
       }
     }
-  }, [isAuthenticated, user, allowedUserTypes, allowedEmployeeTypes, navigate]);
+  }, [isAuthenticated, isHydrating, user, allowedUserTypes, allowedEmployeeTypes, navigate]);
 
-  if (!isAuthenticated) {
+  if (isHydrating || !isAuthenticated) {
     return null;
   }
 
